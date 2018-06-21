@@ -2,6 +2,7 @@ package net.lilggamegenius.popularmovies;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,15 +19,19 @@ import info.movito.themoviedbapi.TmdbApi;
 import info.movito.themoviedbapi.TmdbMovies;
 import info.movito.themoviedbapi.model.MovieDb;
 import info.movito.themoviedbapi.model.core.MovieResultsPage;
+import info.movito.themoviedbapi.tools.MovieDbException;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
     public static final String language = "English"; // todo turn into setting or get from device language
     private static final String region = ""; // todo turn into setting or get from device language
     private static final String API_KEY = BuildConfig.TMDBAPIKey;
+    @Nullable
     public static TmdbApi tmdbApi;
     public static MainActivity.Filter filter; // TODO: come up with more descriptive name
+    @Nullable
     private TmdbMovies tmdbMovies;
 
+    @Nullable
     private List<MovieDb> results = new LinkedList<>();
     private int curPage;
     private int spanCount;
@@ -35,38 +40,50 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     MovieAdapter(int spanCount, ListItemClickListener listItemClickListener) {
         this.spanCount = spanCount;
         clickListener = listItemClickListener;
-        tmdbApi = new TmdbApi(API_KEY);
-        tmdbMovies = tmdbApi.getMovies();
+        connectToAPI();
         if(filter == null) filter = MainActivity.Filter.Popular;
         fetchResults(true);
     }
 
+    private void connectToAPI() {
+        try {
+            tmdbApi = new TmdbApi(API_KEY);
+            tmdbMovies = tmdbApi.getMovies();
+        } catch (MovieDbException ignored) {
+        } // No network
+    }
+
     private void fetchResults(boolean newResult) {
+        if (tmdbApi == null || tmdbMovies == null) connectToAPI(); // Try reconnecting
+        if (tmdbApi == null || tmdbMovies == null) return; // Connection failed
         try {
             Thread thread = new Thread(() -> {
                 if(newResult || results == null) {
                     results = new LinkedList<>();
                     curPage = 0;
                 }
-                MovieResultsPage resultsPage;
-                switch (filter){
-                    case Popular:
-                        resultsPage = tmdbMovies.getPopularMovies(language, ++curPage);
-                        break;
-                    case TopRated:
-                        resultsPage = tmdbMovies.getTopRatedMovies(language, ++curPage);
-                        break;
-                    case Upcoming:
-                        resultsPage = tmdbMovies.getUpcoming(language, ++curPage, region);
-                        break;
-                    case NowPlaying:
-                        resultsPage = tmdbMovies.getNowPlayingMovies(language, ++curPage, region);
-                        break;
-                    default:
-                        throw new RuntimeException("filter not part of Filter enum");
-                }
-                results.addAll(resultsPage.getResults());
-                System.out.printf("Page: %d Item count: %d\n", resultsPage.getPage(), results.size());
+                try {
+                    MovieResultsPage resultsPage;
+                    switch (filter) {
+                        case Popular:
+                            resultsPage = tmdbMovies.getPopularMovies(language, ++curPage);
+                            break;
+                        case TopRated:
+                            resultsPage = tmdbMovies.getTopRatedMovies(language, ++curPage);
+                            break;
+                        case Upcoming:
+                            resultsPage = tmdbMovies.getUpcoming(language, ++curPage, region);
+                            break;
+                        case NowPlaying:
+                            resultsPage = tmdbMovies.getNowPlayingMovies(language, ++curPage, region);
+                            break;
+                        default:
+                            throw new RuntimeException("filter not part of Filter enum");
+                    }
+                    results.addAll(resultsPage.getResults());
+                    System.out.printf("Page: %d Item count: %d\n", resultsPage.getPage(), results.size());
+                } catch (MovieDbException ignored) {
+                } // No network
             });
             thread.start();
             thread.join();
@@ -89,6 +106,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
+        if (results == null) return;
         if (position == results.size() - (spanCount+1)) {
             fetchResults(false);
             System.out.printf("Results new size is %d", results.size());
@@ -98,9 +116,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public int getItemCount() {
-        return results.size();
+
+        return results == null ? 0 : results.size();
     }
 
+    @Nullable
     public List<MovieDb> getResults() {
         return results;
     }

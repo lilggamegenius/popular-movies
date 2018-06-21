@@ -17,6 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.util.List;
+
 import info.movito.themoviedbapi.model.MovieDb;
 
 public class MainActivity extends AppCompatActivity
@@ -43,22 +45,32 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         recyclerView = findViewById(R.id.movie_lists);
-        final int spanCount = ((GridLayoutManager)recyclerView.getLayoutManager()).getSpanCount();
+        final int spanCount = ((GridLayoutManager) recyclerView.getLayoutManager()).getSpanCount();
 
         //GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
         //recyclerView.setLayoutManager(layoutManager);
-
-        try {
-            Thread thread = new Thread(() -> {
-                movieAdapter = new MovieAdapter(spanCount, clickedItem -> new Thread(() -> {
-                    MovieDb movieDb = movieAdapter.getResults().get(clickedItem);
+        Thread thread = new Thread(() -> {
+            movieAdapter = new MovieAdapter(spanCount, clickedItem -> new Thread(() -> {
+                List<MovieDb> movies;
+                if ((movies = movieAdapter.getResults()) != null) {
+                    MovieDb movieDb = movies.get(clickedItem);
                     Intent intent = new Intent(this, MovieDetail.class);
                     intent.putExtra("movie", movieDb.getId());
                     startActivity(intent);
-                }).start());
-                recyclerView.setAdapter(movieAdapter);
-            });
-            thread.start();
+                } else {
+                    Toast.makeText(getApplicationContext(), "No internet connectivity",
+                            Toast.LENGTH_LONG).show();
+                }
+            }).start());
+            recyclerView.setAdapter(movieAdapter);
+        });
+        thread.start();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        navigationView.setCheckedItem(R.id.nav_popular);
+        try {
             thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -66,11 +78,6 @@ public class MainActivity extends AppCompatActivity
                     Toast.LENGTH_LONG).show();
             finish();
         }
-
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        navigationView.setCheckedItem(R.id.nav_popular);
     }
 
     @Override
