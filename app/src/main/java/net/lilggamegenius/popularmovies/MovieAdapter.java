@@ -12,85 +12,35 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import info.movito.themoviedbapi.TmdbApi;
-import info.movito.themoviedbapi.TmdbMovies;
 import info.movito.themoviedbapi.model.MovieDb;
-import info.movito.themoviedbapi.model.core.MovieResultsPage;
-import info.movito.themoviedbapi.tools.MovieDbException;
+
+import static net.lilggamegenius.popularmovies.MovieUtils.connectToAPI;
+import static net.lilggamegenius.popularmovies.MovieUtils.fetchResults;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
-    public static final String language = "English"; // todo turn into setting or get from device language
-    private static final String region = ""; // todo turn into setting or get from device language
-    private static final String API_KEY = BuildConfig.TMDBAPIKey;
-    @Nullable
-    public static TmdbApi tmdbApi;
     public static MainActivity.Filter filter; // TODO: come up with more descriptive name
-    @Nullable
-    private TmdbMovies tmdbMovies;
 
-    @Nullable
-    private List<MovieDb> results = new LinkedList<>();
-    private int curPage;
-    private int spanCount;
     private ListItemClickListener clickListener;
+    private RecyclerView recyclerView = null;
 
     MovieAdapter(int spanCount, ListItemClickListener listItemClickListener) {
-        this.spanCount = spanCount;
+        MovieUtils.spanCount = spanCount;
         clickListener = listItemClickListener;
         connectToAPI();
-        if(filter == null) filter = MainActivity.Filter.Popular;
-        fetchResults(true);
+        if (filter == null) filter = MainActivity.Filter.Popular;
+        fetchResults(this, true);
     }
 
-    private void connectToAPI() {
-        try {
-            tmdbApi = new TmdbApi(API_KEY);
-            tmdbMovies = tmdbApi.getMovies();
-        } catch (MovieDbException ignored) {
-        } // No network
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        this.recyclerView = recyclerView;
     }
 
-    private void fetchResults(boolean newResult) {
-        if (tmdbApi == null || tmdbMovies == null) connectToAPI(); // Try reconnecting
-        if (tmdbApi == null || tmdbMovies == null) return; // Connection failed
-        try {
-            Thread thread = new Thread(() -> {
-                if(newResult || results == null) {
-                    results = new LinkedList<>();
-                    curPage = 0;
-                }
-                try {
-                    MovieResultsPage resultsPage;
-                    switch (filter) {
-                        case Popular:
-                            resultsPage = tmdbMovies.getPopularMovies(language, ++curPage);
-                            break;
-                        case TopRated:
-                            resultsPage = tmdbMovies.getTopRatedMovies(language, ++curPage);
-                            break;
-                        case Upcoming:
-                            resultsPage = tmdbMovies.getUpcoming(language, ++curPage, region);
-                            break;
-                        case NowPlaying:
-                            resultsPage = tmdbMovies.getNowPlayingMovies(language, ++curPage, region);
-                            break;
-                        default:
-                            throw new RuntimeException("filter not part of Filter enum");
-                    }
-                    results.addAll(resultsPage.getResults());
-                    System.out.printf("Page: %d Item count: %d\n", resultsPage.getPage(), results.size());
-                } catch (MovieDbException ignored) {
-                } // No network
-            });
-            thread.start();
-            thread.join();
-        } catch (Exception e) {
-            e.printStackTrace();
-            results = null;
-        }
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        if (recyclerView == this.recyclerView) this.recyclerView = null;
     }
 
     @NonNull
@@ -106,26 +56,42 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
-        if (results == null) return;
-        if (position == results.size() - (spanCount+1)) {
+        if (MovieUtils.results == null) return;
+        /*if (position == results.size() - (spanCount*2)) {
             fetchResults(false);
             System.out.printf("Results new size is %d", results.size());
-        }
-        holder.bind(results.get(position));
+        }*/
+        holder.bind(MovieUtils.results.get(position));
     }
 
     @Override
     public int getItemCount() {
 
-        return results == null ? 0 : results.size();
+        return MovieUtils.results == null ? 0 : MovieUtils.results.size();
     }
 
     @Nullable
     public List<MovieDb> getResults() {
-        return results;
+        return MovieUtils.results;
     }
 
-    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public int getPageCount() {
+        return MovieUtils.curPage;
+    }
+
+    public int getTotalPages() {
+        return MovieUtils.pageCount;
+    }
+
+    public RecyclerView getRecyclerView() {
+        return recyclerView;
+    }
+
+    public interface ListItemClickListener {
+        void onListItemClick(int clickedItem);
+    }
+
+    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView movieImage;
         TextView movieInfo;
 
@@ -150,12 +116,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
         @Override
         public void onClick(View v) {
-            if(clickListener != null){
+            if (clickListener != null) {
                 clickListener.onListItemClick(getAdapterPosition());
             }
         }
-    }
-    public interface ListItemClickListener{
-        void onListItemClick(int clickedItem);
+
     }
 }
