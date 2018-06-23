@@ -29,17 +29,19 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         clickListener = listItemClickListener;
         //connectToAPI();
         if (filter == null) filter = MainActivity.Filter.Popular;
-        fetchResults(this, true);
+        //fetchResults(this, true);
     }
 
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         this.recyclerView = recyclerView;
+        fetchResults(this, true);
     }
 
     @Override
     public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
         if (recyclerView == this.recyclerView) this.recyclerView = null;
+        notifyDataSetChanged();
     }
 
     @NonNull

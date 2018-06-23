@@ -84,7 +84,7 @@ public class ApiUrl {
     }
 
     public boolean isInclude_adult() {
-        String val = "page";
+        String val = "include_adult";
         return map.containsKey(val) && Boolean.getBoolean(map.get(val));
     }
 

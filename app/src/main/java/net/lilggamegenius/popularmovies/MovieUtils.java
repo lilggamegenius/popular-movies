@@ -1,5 +1,6 @@
 package net.lilggamegenius.popularmovies;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 
@@ -36,9 +37,11 @@ public /*static*/ class MovieUtils {
 
     public static void fetchResults(MovieAdapter adapter, boolean newResult) {
         try {
-            Thread thread = new Thread(() -> {
+            @SuppressLint("DefaultLocale") Thread thread = new Thread(() -> {
                 Thread.currentThread().setName(String.format("%s-%d", "FetchResults", Thread.currentThread().getId()));
                 int oldSize = results != null ? results.size() : 0;
+                //noinspection StatementWithEmptyBody
+                if (adapter == null) return;
                 RecyclerView recyclerView = adapter.getRecyclerView();
                 if (newResult || results == null) {
                     results = new LinkedList<>();
@@ -54,10 +57,8 @@ public /*static*/ class MovieUtils {
                             results.add(movie);
                         }*/
                         results.addAll(movies);
-                    if (!newResult) {
-                        if (recyclerView != null)
-                            recyclerView.post(() -> adapter.notifyItemRangeInserted(oldSize - 1, 20));
-                    }
+                    if (recyclerView != null)
+                        recyclerView.post(() -> adapter.notifyItemRangeInserted(oldSize, 20));
                     System.out.printf("Page: %d/%d Item count: %d\n", curPage, 1000, results.size());
                 } catch (Exception ignored) {
                 } // No network
@@ -105,7 +106,7 @@ public /*static*/ class MovieUtils {
         ApiUrl apiUrl = new ApiUrl("/movie/" + id);
         apiUrl.getMap().put("append_to_response", "images,alternative_titles");
         ObjectMapper mapper = new ObjectMapper();
-        String value = null;
+        String value;
         try (Scanner scanner = new Scanner(new URL(apiUrl.toString()).openStream())) {
             scanner.useDelimiter("\\A");
             value = scanner.hasNext() ? scanner.next() : "";

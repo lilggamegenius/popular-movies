@@ -56,12 +56,13 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         recyclerView = findViewById(R.id.movie_lists);
-        createAdapter();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         navigationView.post(() -> navigationView.setCheckedItem(R.id.nav_popular));
+
+        createAdapter();
     }
 
     @Override
