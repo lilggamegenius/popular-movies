@@ -3,36 +3,31 @@ package net.lilggamegenius.popularmovies;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import net.lilggamegenius.popularmovies.TMDB.ApiUrl;
+import net.lilggamegenius.popularmovies.TMDB.Movie;
+
+import java.io.IOException;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
 
-import info.movito.themoviedbapi.TmdbApi;
-import info.movito.themoviedbapi.TmdbMovies;
-import info.movito.themoviedbapi.model.MovieDb;
-import info.movito.themoviedbapi.model.core.MovieResultsPage;
-import info.movito.themoviedbapi.tools.MovieDbException;
 
 public /*static*/ class MovieUtils {
-    public static final String language = "English"; // todo turn into setting or get from device language
-    public static final String region = ""; // todo turn into setting or get from device language
-    public static final String API_KEY = BuildConfig.TMDBAPIKey;
-    @Nullable
-    public static TmdbApi tmdbApi;
-    @Nullable
-    public static TmdbMovies tmdbMovies;
+    public static final String language = Locale.getDefault().getLanguage();
+    public static final String region = Locale.getDefault().getCountry();
 
     @Nullable
-    public static List<MovieDb> results = new LinkedList<>();
+    public static List<Movie> results = new LinkedList<>();
     public static int curPage;
     public static int pageCount;
     public static int spanCount;
 
-    public static void connectToAPI() {
-        try {
-            tmdbApi = new TmdbApi(API_KEY);
-            tmdbMovies = tmdbApi.getMovies();
-        } catch (MovieDbException ignored) {
-        } // No network
+    private MovieUtils() {
     }
 
     public static void fetchResults(MovieAdapter adapter) {
@@ -40,10 +35,9 @@ public /*static*/ class MovieUtils {
     }
 
     public static void fetchResults(MovieAdapter adapter, boolean newResult) {
-        if (tmdbApi == null || tmdbMovies == null) connectToAPI(); // Try reconnecting
-        if (tmdbApi == null || tmdbMovies == null) return; // Connection failed
         try {
             Thread thread = new Thread(() -> {
+                Thread.currentThread().setName(String.format("%s-%d", "FetchResults", Thread.currentThread().getId()));
                 int oldSize = results != null ? results.size() : 0;
                 RecyclerView recyclerView = adapter.getRecyclerView();
                 if (newResult || results == null) {
@@ -53,30 +47,19 @@ public /*static*/ class MovieUtils {
                         recyclerView.post(() -> adapter.notifyItemRangeRemoved(0, oldSize));
                 }
                 try {
-                    MovieResultsPage resultsPage;
-                    switch (MovieAdapter.filter) {
-                        case Popular:
-                            resultsPage = tmdbMovies.getPopularMovies(language, ++curPage);
-                            break;
-                        case TopRated:
-                            resultsPage = tmdbMovies.getTopRatedMovies(language, ++curPage);
-                            break;
-                        case Upcoming:
-                            resultsPage = tmdbMovies.getUpcoming(language, ++curPage, region);
-                            break;
-                        case NowPlaying:
-                            resultsPage = tmdbMovies.getNowPlayingMovies(language, ++curPage, region);
-                            break;
-                        default:
-                            throw new RuntimeException("filter not part of Filter enum");
-                    }
-                    results.addAll(resultsPage.getResults());
-                    if (newResult) {
+                    List<Movie> movies = getMovies(MovieAdapter.filter, ++curPage);
+                    if (movies != null)
+                        /*for (int i = 0, moviesSize = movies.size(); i < moviesSize; i++) {
+                            Movie movie = getMovie(movies.get(i).getId());
+                            results.add(movie);
+                        }*/
+                        results.addAll(movies);
+                    if (!newResult) {
                         if (recyclerView != null)
-                            recyclerView.post(() -> adapter.notifyItemRangeInserted(oldSize + 1, 20));
+                            recyclerView.post(() -> adapter.notifyItemRangeInserted(oldSize - 1, 20));
                     }
-                    System.out.printf("Page: %d/%d Item count: %d\n", resultsPage.getPage(), pageCount = resultsPage.getTotalPages(), results.size());
-                } catch (MovieDbException ignored) {
+                    System.out.printf("Page: %d/%d Item count: %d\n", curPage, 1000, results.size());
+                } catch (Exception ignored) {
                 } // No network
             });
             thread.start();
@@ -85,4 +68,64 @@ public /*static*/ class MovieUtils {
             results = null;
         }
     }
+
+
+    public static List<Movie> getMovies(MainActivity.Filter filter) {
+        return getMovies(filter, 1);
+    }
+
+    public static List<Movie> getMovies(MainActivity.Filter filter, int page) {
+        ApiUrl apiUrl = new ApiUrl("/movie/", (short) page);
+        switch (filter) {
+            case Popular:
+                apiUrl.setApiPath(apiUrl.getApiPath() + "popular");
+                break;
+            case TopRated:
+                apiUrl.setApiPath(apiUrl.getApiPath() + "top_rated");
+                break;
+            case Upcoming:
+                break;
+            case NowPlaying:
+                break;
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            URL url = new URL(apiUrl.toString());
+            MovieResponse results = mapper.readValue(url, MovieResponse.class);
+            pageCount = results.total_pages;
+            return results.results;
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Movie getMovie(int id) {
+        ApiUrl apiUrl = new ApiUrl("/movie/" + id);
+        apiUrl.getMap().put("append_to_response", "images,alternative_titles");
+        ObjectMapper mapper = new ObjectMapper();
+        String value = null;
+        try (Scanner scanner = new Scanner(new URL(apiUrl.toString()).openStream())) {
+            scanner.useDelimiter("\\A");
+            value = scanner.hasNext() ? scanner.next() : "";
+            /*if(true){ // todo for debugging
+                Object json = mapper.readValue(value, Object.class);
+                value = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+            }*/
+            return mapper.readValue(value, Movie.class);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class MovieResponse {
+    int page;
+    List<Movie> results;
+    int total_results;
+    int total_pages;
 }

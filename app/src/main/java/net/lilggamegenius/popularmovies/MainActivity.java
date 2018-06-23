@@ -19,9 +19,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import net.lilggamegenius.popularmovies.TMDB.Movie;
+
 import java.util.List;
 
-import info.movito.themoviedbapi.model.MovieDb;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -37,7 +38,10 @@ public class MainActivity extends AppCompatActivity
         new Thread(this::setupMainUI).start();
     }
 
+    public static final String API_IMAGE_URL = "http://image.tmdb.org/t/p/";
+
     private void setupMainUI() {
+        Thread.currentThread().setName("setupMainUI");
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -58,52 +62,6 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         navigationView.post(() -> navigationView.setCheckedItem(R.id.nav_popular));
-    }
-
-    private void createAdapter() {
-        GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-        final int spanCount = layoutManager.getSpanCount();
-
-        //GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
-        //recyclerView.setLayoutManager(layoutManager);
-        movieAdapter = new MovieAdapter(spanCount, clickedItem -> new Thread(() -> {
-            List<MovieDb> movies;
-            if ((movies = movieAdapter.getResults()) != null) {
-                MovieDb movieDb = movies.get(clickedItem);
-                Intent intent = new Intent(this, MovieDetail.class);
-                intent.putExtra("movie", movieDb.getId());
-                startActivity(intent);
-            } else {
-                Toast.makeText(getApplicationContext(), "No internet connectivity",
-                        Toast.LENGTH_LONG).show();
-            }
-        }).start());
-        recyclerView.post(() -> {
-            recyclerView.setItemAnimator(new DefaultItemAnimator());
-            recyclerView.setAdapter(movieAdapter);
-            recyclerView.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-            recyclerView.addOnScrollListener(new PaginationScrollListener(layoutManager) {
-                @Override
-                protected void loadMoreItems() {
-                    MovieUtils.fetchResults(movieAdapter);
-                }
-
-                @Override
-                public int getTotalPageCount() {
-                    return movieAdapter.getTotalPages();
-                }
-
-                @Override
-                public boolean isLastPage() {
-                    return movieAdapter.getPageCount() >= movieAdapter.getTotalPages();
-                }
-
-                @Override
-                public boolean isLoading() {
-                    return false;
-                }
-            });
-        });
     }
 
     @Override
@@ -181,11 +139,56 @@ public class MainActivity extends AppCompatActivity
         MovieUtils.fetchResults(movieAdapter, true);
     }
 
-    enum Filter {
-        Popular, TopRated, Upcoming, NowPlaying
+    private void createAdapter() {
+        GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+        final int spanCount = layoutManager.getSpanCount();
+
+        //GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
+        //recyclerView.setLayoutManager(layoutManager);
+        movieAdapter = new MovieAdapter(spanCount, clickedItem -> new Thread(() -> {
+            Thread.currentThread().setName("ClickedItemHandler");
+            List<Movie> movies;
+            if ((movies = movieAdapter.getResults()) != null) {
+                Movie movie = movies.get(clickedItem);
+                Intent intent = new Intent(this, MovieDetail.class);
+                intent.putExtra("movie", movie.getId());
+                startActivity(intent);
+            } else {
+                Toast.makeText(getApplicationContext(), "No internet connectivity",
+                        Toast.LENGTH_LONG).show();
+            }
+        }).start());
+        recyclerView.post(() -> {
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setAdapter(movieAdapter);
+            recyclerView.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+            recyclerView.addOnScrollListener(new PaginationScrollListener(layoutManager) {
+                @Override
+                protected void loadMoreItems() {
+                    MovieUtils.fetchResults(movieAdapter);
+                }
+
+                @Override
+                public int getTotalPageCount() {
+                    return movieAdapter.getTotalPages();
+                }
+
+                @Override
+                public boolean isLastPage() {
+                    return movieAdapter.getPageCount() >= movieAdapter.getTotalPages();
+                }
+
+                @Override
+                public boolean isLoading() {
+                    return false;
+                }
+            });
+        });
     }
 
-    public static final String API_URL = "http://image.tmdb.org/t/p/";
+    public enum Filter {
+        Popular, TopRated, Upcoming, NowPlaying
+    }
 
     public enum Size {
         w92,

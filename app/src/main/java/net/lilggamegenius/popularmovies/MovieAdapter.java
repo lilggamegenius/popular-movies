@@ -12,11 +12,10 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import net.lilggamegenius.popularmovies.TMDB.Movie;
+
 import java.util.List;
 
-import info.movito.themoviedbapi.model.MovieDb;
-
-import static net.lilggamegenius.popularmovies.MovieUtils.connectToAPI;
 import static net.lilggamegenius.popularmovies.MovieUtils.fetchResults;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
@@ -28,7 +27,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     MovieAdapter(int spanCount, ListItemClickListener listItemClickListener) {
         MovieUtils.spanCount = spanCount;
         clickListener = listItemClickListener;
-        connectToAPI();
+        //connectToAPI();
         if (filter == null) filter = MainActivity.Filter.Popular;
         fetchResults(this, true);
     }
@@ -71,7 +70,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     }
 
     @Nullable
-    public List<MovieDb> getResults() {
+    public List<Movie> getResults() {
         return MovieUtils.results;
     }
 
@@ -103,14 +102,20 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             itemView.setOnClickListener(this);
         }
 
-        void bind(MovieDb movie) {
-            MainActivity.Size size = MainActivity.Size.w185;
-            Picasso
-                    .with(this.itemView.getContext())
-                    .load(String.format("%s%s%s", MainActivity.API_URL, size, movie.getPosterPath()))
-                    //.resize(movieImage.getWidth(), movieImage.getHeight())
-                    //.centerCrop()
-                    .into(movieImage);
+        void bind(Movie movie) {
+            if (movie == null) {
+                System.err.println("Movie is null");
+                return;
+            }
+            if (movie.getPosterPath() != null) {
+                MainActivity.Size size = MainActivity.Size.w185;
+                Picasso
+                        .with(this.itemView.getContext())
+                        .load(String.format("%s%s%s", MainActivity.API_IMAGE_URL, size, movie.getPosterPath()))
+                        //.resize(movieImage.getWidth(), movieImage.getHeight())
+                        //.centerCrop()
+                        .into(movieImage);
+            }
             movieInfo.setText(movie.getTitle());
         }
 
