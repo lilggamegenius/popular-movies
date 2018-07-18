@@ -13,8 +13,22 @@ import com.squareup.picasso.Picasso;
 
 import net.lilggamegenius.popularmovies.TMDB.Movie;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MovieDetail extends AppCompatActivity {
     Movie movie;
+
+    @BindView(R.id.movie_detail_title)
+    TextView title;
+    @BindView(R.id.movie_detail_image)
+    ImageView poster;
+    @BindView(R.id.movie_detail_overview)
+    TextView overview;
+    @BindView(R.id.movie_detail_release_date)
+    TextView releaseDate;
+    @BindView(R.id.movie_detail_rating)
+    TextView rating;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +37,7 @@ public class MovieDetail extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        ButterKnife.bind(this);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -34,12 +49,7 @@ public class MovieDetail extends AppCompatActivity {
 
     private void fillUI(Intent intent) {
         Thread.currentThread().setName(String.format("%s: %s", "FillUI", movie));
-        TextView title = findViewById(R.id.movie_detail_title);
-        ImageView poster = findViewById(R.id.movie_detail_image);
-        TextView overview = findViewById(R.id.movie_detail_overview);
-        TextView releaseDate = findViewById(R.id.movie_detail_release_date);
-        TextView rating = findViewById(R.id.movie_detail_rating);
-        movie = MovieUtils.getMovie(intent.getIntExtra("movie", 0));
+        movie = intent.getParcelableExtra("movie");
 
         // todo: Decide if these should use one post or stay separate
         title.post(() -> title.setText(movie.getTitle()));

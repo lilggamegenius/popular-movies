@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity
             if ((movies = movieAdapter.getResults()) != null) {
                 Movie movie = movies.get(clickedItem);
                 Intent intent = new Intent(this, MovieDetail.class);
-                intent.putExtra("movie", movie.getId());
+                intent.putExtra("movie", movie);
                 startActivity(intent);
             } else {
                 Toast.makeText(getApplicationContext(), "No internet connectivity",

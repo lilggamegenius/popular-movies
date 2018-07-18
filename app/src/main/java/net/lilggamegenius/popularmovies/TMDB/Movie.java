@@ -1,5 +1,8 @@
 package net.lilggamegenius.popularmovies.TMDB;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -10,7 +13,7 @@ enum Status {
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Movie {
+public class Movie implements Parcelable {
     public boolean adult;
     public String backdrop_path;
     public BelongsToCollection belongs_to_collection;
@@ -258,6 +261,77 @@ public class Movie {
 
     public void setAlternativeTitles(AlternativeTitles alternative_titles) {
         this.alternative_titles = alternative_titles;
+    }
+
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        @Override
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        @Override
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
+
+    public Movie() {
+    }
+
+    protected Movie(Parcel in) {
+        adult = in.readByte() != 0;
+        backdrop_path = in.readString();
+        budget = in.readInt();
+        homepage = in.readString();
+        id = in.readInt();
+        imdb_id = in.readString();
+        original_language = in.readString();
+        original_title = in.readString();
+        overview = in.readString();
+        popularity = in.readDouble();
+        poster_path = in.readString();
+        release_date = in.readString();
+        revenue = in.readLong();
+        runtime = in.readInt();
+        tagline = in.readString();
+        title = in.readString();
+        video = in.readByte() != 0;
+        vote_average = in.readDouble();
+        vote_count = in.readInt();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeByte((byte) (adult ? 1 : 0));
+        dest.writeString(backdrop_path);
+        dest.writeInt(budget);
+        dest.writeString(homepage);
+        dest.writeInt(id);
+        dest.writeString(imdb_id);
+        dest.writeString(original_language);
+        dest.writeString(original_title);
+        dest.writeString(overview);
+        dest.writeDouble(popularity);
+        dest.writeString(poster_path);
+        dest.writeString(release_date);
+        dest.writeLong(revenue);
+        dest.writeInt(runtime);
+        dest.writeString(tagline);
+        dest.writeString(title);
+        dest.writeByte((byte) (video ? 1 : 0));
+        dest.writeDouble(vote_average);
+        dest.writeInt(vote_count);
+        dest.writeString(title);
+        dest.writeString(poster_path);
+        dest.writeInt(id);
+        dest.writeString(overview);
+        dest.writeString(release_date);
+        dest.writeDouble(vote_average);
     }
 }
 
