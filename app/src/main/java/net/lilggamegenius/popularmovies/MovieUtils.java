@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.lilggamegenius.popularmovies.TMDB.ApiUrl;
-import net.lilggamegenius.popularmovies.TMDB.Movie;
+import net.lilggamegenius.popularmovies.TMDB.POJOs.Movie;
 
 import java.io.IOException;
 import java.net.URL;
@@ -104,16 +104,16 @@ public /*static*/ class MovieUtils {
 
     public static Movie getMovie(int id) {
         ApiUrl apiUrl = new ApiUrl("/movie/" + id);
-        apiUrl.getMap().put("append_to_response", "images,alternative_titles");
+        apiUrl.getMap().put("append_to_response", "images,alternative_titles,videos,reviews");
         ObjectMapper mapper = new ObjectMapper();
         String value;
         try (Scanner scanner = new Scanner(new URL(apiUrl.toString()).openStream())) {
             scanner.useDelimiter("\\A");
             value = scanner.hasNext() ? scanner.next() : "";
-            /*if(true){ // todo for debugging
+            if (true) { // todo for debugging
                 Object json = mapper.readValue(value, Object.class);
                 value = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
-            }*/
+            }
             return mapper.readValue(value, Movie.class);
         } catch (IOException e) {
             // TODO Auto-generated catch block

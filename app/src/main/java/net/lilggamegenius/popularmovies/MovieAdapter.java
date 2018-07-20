@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import net.lilggamegenius.popularmovies.TMDB.Movie;
+import net.lilggamegenius.popularmovies.TMDB.POJOs.Movie;
 
 import java.util.List;
 

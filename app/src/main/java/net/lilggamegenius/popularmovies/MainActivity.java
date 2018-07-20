@@ -19,7 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import net.lilggamegenius.popularmovies.TMDB.Movie;
+import net.lilggamegenius.popularmovies.TMDB.POJOs.Movie;
 
 import java.util.List;
 
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity
             if ((movies = movieAdapter.getResults()) != null) {
                 Movie movie = movies.get(clickedItem);
                 Intent intent = new Intent(this, MovieDetail.class);
-                intent.putExtra("movie", movie);
+                intent.putExtra("movie", movie.id);
                 startActivity(intent);
             } else {
                 Toast.makeText(getApplicationContext(), "No internet connectivity",

@@ -10,7 +10,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/movie_detail_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".MovieDetail"
         tools:showIn="@layout/activity_movie_detail">
@@ -26,20 +26,6 @@
             app:srcCompat="@drawable/movie_detail_image_placeholder" />
 
         <TextView
-            android:id="@+id/movie_detail_overview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginStart="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/movie_detail_image"
-            tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras posuere mauris in nisl porttitor, sed pulvinar enim egestas. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam congue ex est, vel fringilla mi porttitor id. Nulla sed urna vel odio malesuada tincidunt. Sed quis lorem eu ante congue vestibulum. Donec risus diam, pharetra non sodales at, cursus sit amet nibh. In et egestas massa, a consequat est. Nullam posuere massa mauris, ac vestibulum odio luctus id. Sed pellentesque sapien nulla, sed imperdiet dui fringilla vitae. Fusce libero odio, viverra non nulla a, ultricies tincidunt metus. Quisque nec tellus vel ipsum vulputate sagittis in at nisi. Nulla congue convallis nisi, hendrerit tempor nisi tempus quis. Nunc condimentum pharetra iaculis. Donec ligula nisl, consectetur ultrices lacus sit amet, viverra sagittis risus." />
-
-        <TextView
             android:id="@+id/movie_detail_release_date"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -51,17 +37,68 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Released: 00/00/0000" />
 
-        <TextView
+        <RatingBar
             android:id="@+id/movie_detail_rating"
-            android:layout_width="0dp"
+            style="@android:style/Widget.Holo.RatingBar.Small"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:numStars="5"
+            android:rating="2.5"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/movie_detail_image"
-            app:layout_constraintTop_toBottomOf="@+id/movie_detail_release_date"
-            tools:text="Rating: 100" />
+            app:layout_constraintTop_toBottomOf="@+id/movie_detail_release_date" />
+
+        <TextView
+            android:id="@+id/movie_detail_overview"
+            android:layout_width="wrap_content"
+            android:layout_height="76dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/movie_detail_image"
+            tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras posuere mauris in nisl porttitor, sed pulvinar enim egestas. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam congue ex est, vel fringilla mi porttitor id. Nulla sed urna vel odio malesuada tincidunt. Sed quis lorem eu ante congue vestibulum. Donec risus diam, pharetra non sodales at, cursus sit amet nibh. In et egestas massa, a consequat est." />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/content_movie_detail_reviews"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout3"
+            tools:listitem="@layout/review_list_item" />
+
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/movie_detail_overview">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/content_movie_detail_trailers"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/movie_detail_overview"
+                tools:listitem="@layout/trailer_list_item">
+
+            </android.support.v7.widget.RecyclerView>
+        </LinearLayout>
 
     </android.support.constraint.ConstraintLayout>
 </ScrollView>
