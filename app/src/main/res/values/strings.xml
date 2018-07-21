@@ -12,6 +12,7 @@
     <string name="top_rated_category">Top Rated</string>
     <string name="upcoming_category">Upcoming</string>
     <string name="nowplaying_category">Now Playing</string>
+    <string name="favorites_category">Favorites</string>
     <string name="movie_poster">Movie poster</string>
     <string name="title_activity_movie_detail">Movie Detail</string>
     <string name="movie_detail_title_desc">Movie Title</string>

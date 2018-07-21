@@ -252,13 +252,13 @@ public class Movie implements Parcelable {
         return this.status;
     }
 
-    public void setStatus(String status) {
-        this.status = Status.valueOf(status);
-    }
-
     @JsonIgnore
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public void setStatus(String status) {
+        this.status = Status.valueOf(status);
     }
 
     public String getTagline() {

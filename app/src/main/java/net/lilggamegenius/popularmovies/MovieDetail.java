@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,7 +18,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.picasso.Picasso;
 
 import net.lilggamegenius.popularmovies.TMDB.POJOs.Movie;
@@ -59,8 +60,12 @@ public class MovieDetail extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
+        fab.setOnClickListener(view -> {
+            if (MainActivity.dbHelper.insertFavorite(movie)) {
+                Toast.makeText(getApplicationContext(), "Added '" + movie.getTitle() + "' to your favorites",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
 
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -70,14 +75,26 @@ public class MovieDetail extends AppCompatActivity {
         trailers.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         reviews.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        Thread thread = new Thread(() -> fillUI(getIntent()));
+        Thread thread = new Thread(() -> {
+            Intent intent = getIntent();
+            if (!intent.getBooleanExtra("favorite", false)) {
+                fillUI(getIntent());
+                return;
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            movie = MovieUtils.getMovie(intent.getIntExtra("movie", 0), true);
+            fillUI(movie);
+        });
         thread.start();
     }
 
-    private void fillUI(Intent intent) {
+    private void fillUI(final Intent intent) {
         Thread.currentThread().setName(String.format("%s: %s", "FillUI", movie));
-        movie = MovieUtils.getMovie(intent.getIntExtra("movie", 0));
+        movie = MovieUtils.getMovie(intent.getIntExtra("movie", 0), false);
+        fillUI(movie);
+    }
 
+    private void fillUI(final Movie movie) {
         trailers.post(() -> trailers.setAdapter(new TrailerList(movie.videos)));
         reviews.post(() -> reviews.setAdapter(new ReviewList(movie.reviews)));
 

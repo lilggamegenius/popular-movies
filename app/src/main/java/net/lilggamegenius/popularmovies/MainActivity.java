@@ -1,6 +1,7 @@
 package net.lilggamegenius.popularmovies;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -27,6 +28,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static final String API_IMAGE_URL = "http://image.tmdb.org/t/p/";
+    public static DBHelper dbHelper;
     public MovieAdapter movieAdapter;
     public RecyclerView recyclerView;
 
@@ -38,13 +41,14 @@ public class MainActivity extends AppCompatActivity
         new Thread(this::setupMainUI).start();
     }
 
-    public static final String API_IMAGE_URL = "http://image.tmdb.org/t/p/";
-
     private void setupMainUI() {
         Thread.currentThread().setName("setupMainUI");
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        dbHelper = new DBHelper(this);
+        Cursor cursor = dbHelper.getReadableDatabase().query(DBHelper.FAVORITES_TABLE_NAME, new String[]{"*"}, null, null, null, null, null);
+        System.out.println(cursor.toString());
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> Snackbar.make(view, "TODO: make this button do something", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show());
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
-        toggle.syncState();
+        drawer.post(toggle::syncState);
 
         recyclerView = findViewById(R.id.movie_lists);
 
@@ -120,6 +124,9 @@ public class MainActivity extends AppCompatActivity
                         Toast.LENGTH_SHORT).show();
                 MovieAdapter.filter = Filter.NowPlaying;
                 break;
+            case R.id.nav_favorites:
+                MovieAdapter.filter = Filter.Favorites;
+                break;
             case R.id.nav_share:
                 Toast.makeText(getApplicationContext(), "Not yet implemented",
                         Toast.LENGTH_SHORT).show();
@@ -153,6 +160,7 @@ public class MainActivity extends AppCompatActivity
                 Movie movie = movies.get(clickedItem);
                 Intent intent = new Intent(this, MovieDetail.class);
                 intent.putExtra("movie", movie.id);
+                intent.putExtra("favorite", MovieAdapter.filter == Filter.Favorites);
                 startActivity(intent);
             } else {
                 Toast.makeText(getApplicationContext(), "No internet connectivity",
@@ -188,7 +196,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public enum Filter {
-        Popular, TopRated, Upcoming, NowPlaying
+        Popular, TopRated, Upcoming, NowPlaying, Favorites
     }
 
     public enum Size {

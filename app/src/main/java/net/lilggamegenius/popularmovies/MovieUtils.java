@@ -91,10 +91,13 @@ public /*static*/ class MovieUtils {
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
-            URL url = new URL(apiUrl.toString());
-            MovieResponse results = mapper.readValue(url, MovieResponse.class);
-            pageCount = results.total_pages;
-            return results.results;
+            if (filter != MainActivity.Filter.Favorites) {
+                URL url = new URL(apiUrl.toString());
+                MovieResponse results = mapper.readValue(url, MovieResponse.class);
+                pageCount = results.total_pages;
+                return results.results;
+            }
+            return MainActivity.dbHelper.getAllFavoritess();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -102,22 +105,29 @@ public /*static*/ class MovieUtils {
         return null;
     }
 
-    public static Movie getMovie(int id) {
-        ApiUrl apiUrl = new ApiUrl("/movie/" + id);
-        apiUrl.getMap().put("append_to_response", "images,alternative_titles,videos,reviews");
-        ObjectMapper mapper = new ObjectMapper();
-        String value;
-        try (Scanner scanner = new Scanner(new URL(apiUrl.toString()).openStream())) {
-            scanner.useDelimiter("\\A");
-            value = scanner.hasNext() ? scanner.next() : "";
-            if (true) { // todo for debugging
+    public static Movie getMovie(int id, boolean favorites) {
+        if (!favorites) {
+            ApiUrl apiUrl = new ApiUrl("/movie/" + id);
+            apiUrl.getMap().put("append_to_response", "images,alternative_titles,videos,reviews");
+            ObjectMapper mapper = new ObjectMapper();
+            String value;
+            try (Scanner scanner = new Scanner(new URL(apiUrl.toString()).openStream())) {
+                scanner.useDelimiter("\\A");
+                value = scanner.hasNext() ? scanner.next() : "";
+            /*if (true) { // todo for debugging
                 Object json = mapper.readValue(value, Object.class);
                 value = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+            }*/
+                return mapper.readValue(value, Movie.class);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
-            return mapper.readValue(value, Movie.class);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } else {
+            List<Movie> movies = MainActivity.dbHelper.getAllFavoritess();
+            for (Movie movie : movies) {
+                if (movie.id == id) return movie;
+            }
         }
         return null;
     }
