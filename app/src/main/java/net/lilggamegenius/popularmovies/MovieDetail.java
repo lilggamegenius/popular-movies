@@ -61,10 +61,19 @@ public class MovieDetail extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
-            if (MainActivity.dbHelper.insertFavorite(movie)) {
+            int ret = MainActivity.favoritesDbHelper.deleteFavorite(movie.id);
+            if (ret != 0) {
+                Toast.makeText(getApplicationContext(), "Removed '" + movie.getTitle() + "' to your favorites",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (MainActivity.favoritesDbHelper.insertFavorite(movie)) {
                 Toast.makeText(getApplicationContext(), "Added '" + movie.getTitle() + "' to your favorites",
                         Toast.LENGTH_SHORT).show();
+                return;
             }
+            Toast.makeText(getApplicationContext(), "Some kind of error occurred. Unable to debug",
+                    Toast.LENGTH_SHORT).show();
         });
 
         ActionBar actionBar = getSupportActionBar();

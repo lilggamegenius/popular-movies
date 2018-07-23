@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 import net.lilggamegenius.popularmovies.BuildConfig;
 
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -107,7 +106,8 @@ public class ApiUrl {
         boolean seen = false;
         StringBuilder acc = null;
         for (Map.Entry<String, String> p : map.entrySet()) {
-            String s = URLEncoder.encode(p.getKey()) + "=" + URLEncoder.encode(p.getValue());
+            //String s = URLEncoder.encode(p.getKey()) + "=" + URLEncoder.encode(p.getValue());
+            String s = p.getKey() + "=" + p.getValue();
             if (!seen) {
                 seen = true;
                 acc = new StringBuilder(s);

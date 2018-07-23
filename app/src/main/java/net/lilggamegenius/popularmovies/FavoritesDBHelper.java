@@ -17,15 +17,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class DBHelper extends SQLiteOpenHelper {
+public class FavoritesDBHelper extends SQLiteOpenHelper {
     public static final ObjectMapper objectMapper = new ObjectMapper();
     public static final String DATABASE_NAME = "MyDBName.db";
     public static final String FAVORITES_TABLE_NAME = "favorites";
     public static final String FAVORITES_COLUMN_ID = "id";
+    public static final String FAVORITES_COLUMN_TMdBID = "tmdbid";
     public static final String FAVORITES_COLUMN_JSON = "json";
     private HashMap hp;
 
-    public DBHelper(Context context) {
+    public FavoritesDBHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
     }
 
@@ -34,7 +35,7 @@ public class DBHelper extends SQLiteOpenHelper {
         // TODO Auto-generated method stub
         db.execSQL(
                 "create table favorites " +
-                        "(id integer primary key, json text)"
+                        "(id integer primary key, tmdbid integer, json text)"
         );
     }
 
@@ -49,6 +50,7 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             SQLiteDatabase db = getWritableDatabase();
             ContentValues contentValues = new ContentValues();
+            contentValues.put(FAVORITES_COLUMN_TMdBID, movie.id);
             contentValues.put(FAVORITES_COLUMN_JSON, objectMapper.writeValueAsString(movie));
             db.insert(FAVORITES_TABLE_NAME, null, contentValues);
             return true;
@@ -60,7 +62,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public Cursor getData(int id) {
         SQLiteDatabase db = getReadableDatabase();
-        return db.rawQuery("select * from favorites where id=" + id + "", null);
+        return db.rawQuery("select * from favorites where tmdbid=" + id + "", null);
     }
 
     public int numberOfRows() {
@@ -72,8 +74,9 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             SQLiteDatabase db = getWritableDatabase();
             ContentValues contentValues = new ContentValues();
+            contentValues.put(FAVORITES_COLUMN_TMdBID, movie.id);
             contentValues.put(FAVORITES_COLUMN_JSON, objectMapper.writeValueAsString(movie));
-            db.update(FAVORITES_TABLE_NAME, contentValues, "id = ? ", new String[]{Integer.toString(id)});
+            db.update(FAVORITES_TABLE_NAME, contentValues, "tmdbid = ? ", new String[]{Integer.toString(id)});
             return true;
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -84,7 +87,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public Integer deleteFavorite(Integer id) {
         SQLiteDatabase db = getWritableDatabase();
         return db.delete("favorites",
-                "id = ? ",
+                "tmdbid = ? ",
                 new String[]{Integer.toString(id)});
     }
 

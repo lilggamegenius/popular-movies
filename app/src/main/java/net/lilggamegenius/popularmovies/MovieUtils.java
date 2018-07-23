@@ -51,14 +51,19 @@ public /*static*/ class MovieUtils {
                 }
                 try {
                     List<Movie> movies = getMovies(MovieAdapter.filter, ++curPage);
-                    if (movies != null)
+                    if (MovieAdapter.filter != MainActivity.Filter.Favorites) {
+                        if (movies != null)
                         /*for (int i = 0, moviesSize = movies.size(); i < moviesSize; i++) {
                             Movie movie = getMovie(movies.get(i).getId());
                             results.add(movie);
                         }*/
-                        results.addAll(movies);
-                    if (recyclerView != null)
-                        recyclerView.post(() -> adapter.notifyItemRangeInserted(oldSize, 20));
+                            results.addAll(movies);
+                        if (recyclerView != null)
+                            recyclerView.post(() -> adapter.notifyItemRangeInserted(oldSize, 20));
+                    } else {
+                        if (recyclerView != null)
+                            recyclerView.post(adapter::notifyDataSetChanged);
+                    }
                     System.out.printf("Page: %d/%d Item count: %d\n", curPage, 1000, results.size());
                 } catch (Exception ignored) {
                 } // No network
@@ -97,7 +102,9 @@ public /*static*/ class MovieUtils {
                 pageCount = results.total_pages;
                 return results.results;
             }
-            return MainActivity.dbHelper.getAllFavoritess();
+            results = MainActivity.favoritesDbHelper.getAllFavoritess();
+            pageCount = (results.size() % 20) + 1;
+            return results;
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -124,7 +131,7 @@ public /*static*/ class MovieUtils {
                 e.printStackTrace();
             }
         } else {
-            List<Movie> movies = MainActivity.dbHelper.getAllFavoritess();
+            List<Movie> movies = MainActivity.favoritesDbHelper.getAllFavoritess();
             for (Movie movie : movies) {
                 if (movie.id == id) return movie;
             }

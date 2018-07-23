@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     public static final String API_IMAGE_URL = "http://image.tmdb.org/t/p/";
-    public static DBHelper dbHelper;
+    public static FavoritesDBHelper favoritesDbHelper;
     public MovieAdapter movieAdapter;
     public RecyclerView recyclerView;
 
@@ -46,8 +46,9 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        dbHelper = new DBHelper(this);
-        Cursor cursor = dbHelper.getReadableDatabase().query(DBHelper.FAVORITES_TABLE_NAME, new String[]{"*"}, null, null, null, null, null);
+        favoritesDbHelper = new FavoritesDBHelper(this);
+        //favoritesDbHelper.onUpgrade(favoritesDbHelper.getReadableDatabase(), 0, 0);
+        Cursor cursor = favoritesDbHelper.getReadableDatabase().query(FavoritesDBHelper.FAVORITES_TABLE_NAME, new String[]{"*"}, null, null, null, null, null);
         System.out.println(cursor.toString());
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> Snackbar.make(view, "TODO: make this button do something", Snackbar.LENGTH_LONG)
