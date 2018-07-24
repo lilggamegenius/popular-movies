@@ -20,6 +20,7 @@ import static net.lilggamegenius.popularmovies.MovieUtils.fetchResults;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
     public static MainActivity.Filter filter; // TODO: come up with more descriptive name
+    public static boolean favoritesChanged = false;
 
     private ListItemClickListener clickListener;
     private RecyclerView recyclerView = null;
@@ -67,7 +68,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public int getItemCount() {
-
         return MovieUtils.results == null ? 0 : MovieUtils.results.size();
     }
 
@@ -86,6 +86,13 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     public RecyclerView getRecyclerView() {
         return recyclerView;
+    }
+
+    public void checkForRefresh() {
+        if (favoritesChanged) {
+            recyclerView.setAdapter(this);
+            favoritesChanged = false;
+        }
     }
 
     public interface ListItemClickListener {

@@ -1,7 +1,6 @@
 package net.lilggamegenius.popularmovies;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -48,8 +47,8 @@ public class MainActivity extends AppCompatActivity
 
         favoritesDbHelper = new FavoritesDBHelper(this);
         //favoritesDbHelper.onUpgrade(favoritesDbHelper.getReadableDatabase(), 0, 0);
-        Cursor cursor = favoritesDbHelper.getReadableDatabase().query(FavoritesDBHelper.FAVORITES_TABLE_NAME, new String[]{"*"}, null, null, null, null, null);
-        System.out.println(cursor.toString());
+        //Cursor cursor = favoritesDbHelper.getReadableDatabase().query(FavoritesDBHelper.FAVORITES_TABLE_NAME, new String[]{"*"}, null, null, null, null, null);
+        //System.out.println(cursor.toString());
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> Snackbar.make(view, "TODO: make this button do something", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show());
@@ -154,20 +153,27 @@ public class MainActivity extends AppCompatActivity
 
         //GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
         //recyclerView.setLayoutManager(layoutManager);
-        movieAdapter = new MovieAdapter(spanCount, clickedItem -> new Thread(() -> {
-            Thread.currentThread().setName("ClickedItemHandler");
-            List<Movie> movies;
-            if ((movies = movieAdapter.getResults()) != null) {
-                Movie movie = movies.get(clickedItem);
-                Intent intent = new Intent(this, MovieDetail.class);
-                intent.putExtra("movie", movie.id);
-                intent.putExtra("favorite", MovieAdapter.filter == Filter.Favorites);
-                startActivity(intent);
-            } else {
-                Toast.makeText(getApplicationContext(), "No internet connectivity",
-                        Toast.LENGTH_LONG).show();
+        movieAdapter = new MovieAdapter(spanCount, clickedItem -> {
+            if (MovieAdapter.favoritesChanged) {
+                recyclerView.post(() -> movieAdapter.checkForRefresh());
+
+                return;
             }
-        }).start());
+            new Thread(() -> {
+                Thread.currentThread().setName("ClickedItemHandler");
+                List<Movie> movies;
+                if ((movies = movieAdapter.getResults()) != null) {
+                    Movie movie = movies.get(clickedItem);
+                    Intent intent = new Intent(this, MovieDetail.class);
+                    intent.putExtra("movie", movie.id);
+                    intent.putExtra("favorite", MovieAdapter.filter == Filter.Favorites);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getApplicationContext(), "No internet connectivity",
+                            Toast.LENGTH_LONG).show();
+                }
+            }).start();
+        });
         recyclerView.post(() -> {
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setAdapter(movieAdapter);

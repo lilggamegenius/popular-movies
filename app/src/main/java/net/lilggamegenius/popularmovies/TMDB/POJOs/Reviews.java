@@ -8,7 +8,7 @@ import java.util.List;
 public class Reviews {
     private int id;
     private int page;
-    private List<Review> Reviews;
+    private List<Review> results;
     private int total_pages;
     private int total_Reviews;
 
@@ -28,12 +28,12 @@ public class Reviews {
         this.page = page;
     }
 
-    public List<Review> getReviews() {
-        return this.Reviews;
+    public List<Review> getResults() {
+        return this.results;
     }
 
-    public void setReviews(List<Review> Reviews) {
-        this.Reviews = Reviews;
+    public void setResults(List<Review> Reviews) {
+        this.results = Reviews;
     }
 
     public int getTotalPages() {

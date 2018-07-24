@@ -61,6 +61,9 @@ public class MovieDetail extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
+            if (MovieAdapter.filter == MainActivity.Filter.Favorites) {
+                MovieAdapter.favoritesChanged = true;
+            }
             int ret = MainActivity.favoritesDbHelper.deleteFavorite(movie.id);
             if (ret != 0) {
                 Toast.makeText(getApplicationContext(), "Removed '" + movie.getTitle() + "' to your favorites",
@@ -104,6 +107,10 @@ public class MovieDetail extends AppCompatActivity {
     }
 
     private void fillUI(final Movie movie) {
+        if (movie == null) {
+            //trailers.post(()->Toast.makeText(getApplicationContext(), "Movie not fetched correctly. Is your internet working?", Toast.LENGTH_SHORT).show());
+            this.finish();
+        }
         trailers.post(() -> trailers.setAdapter(new TrailerList(movie.videos)));
         reviews.post(() -> reviews.setAdapter(new ReviewList(movie.reviews)));
 
@@ -188,7 +195,7 @@ public class MovieDetail extends AppCompatActivity {
         }
     }
 
-    private class ReviewList extends RecyclerView.Adapter<ReviewList.ViewHolder> {
+    public class ReviewList extends RecyclerView.Adapter<ReviewList.ViewHolder> {
         Reviews reviews;
 
         public ReviewList(Reviews reviews) {
@@ -210,7 +217,7 @@ public class MovieDetail extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             try {
-                Review review = reviews.getReviews().get(position);
+                Review review = reviews.getResults().get(position);
                 holder.bind(review);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -219,13 +226,14 @@ public class MovieDetail extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            List<Review> reviewList = reviews.getReviews();
+            List<Review> reviewList = reviews.getResults();
             if (reviewList == null) return 0;
             return reviewList.size();
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            TextView username, text;
+            TextView username;
+            TextView text;
             Review review;
 
             public ViewHolder(View itemView) {
@@ -234,6 +242,10 @@ public class MovieDetail extends AppCompatActivity {
 
             public void bind(final Review review) {
                 this.review = review;
+                if (username == null || text == null) {
+                    username = itemView.findViewById(R.id.review_list_item_name);
+                    text = itemView.findViewById(R.id.review_list_item_review);
+                }
                 username.setText(review.getAuthor());
                 text.setText(review.getContent());
             }
