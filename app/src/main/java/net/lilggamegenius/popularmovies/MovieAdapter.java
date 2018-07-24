@@ -14,6 +14,7 @@ import com.squareup.picasso.Picasso;
 
 import net.lilggamegenius.popularmovies.TMDB.POJOs.Movie;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static net.lilggamegenius.popularmovies.MovieUtils.fetchResults;
@@ -22,6 +23,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     public static MainActivity.Filter filter; // TODO: come up with more descriptive name
     public static boolean favoritesChanged = false;
 
+    @Nullable
+    public List<Movie> results = new LinkedList<>();
     private ListItemClickListener clickListener;
     private RecyclerView recyclerView = null;
 
@@ -58,22 +61,22 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
-        if (MovieUtils.results == null) return;
+        if (results == null) return;
         /*if (position == results.size() - (spanCount*2)) {
             fetchResults(false);
             System.out.printf("Results new size is %d", results.size());
         }*/
-        holder.bind(MovieUtils.results.get(position));
+        holder.bind(results.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return MovieUtils.results == null ? 0 : MovieUtils.results.size();
+        return results == null ? 0 : results.size();
     }
 
     @Nullable
     public List<Movie> getResults() {
-        return MovieUtils.results;
+        return results;
     }
 
     public int getPageCount() {

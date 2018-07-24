@@ -1,7 +1,6 @@
 package net.lilggamegenius.popularmovies;
 
 import android.annotation.SuppressLint;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,8 +21,6 @@ public /*static*/ class MovieUtils {
     public static final String language = Locale.getDefault().getLanguage();
     public static final String region = Locale.getDefault().getCountry();
 
-    @Nullable
-    public static List<Movie> results = new LinkedList<>();
     public static int curPage;
     public static int pageCount;
     public static int spanCount;
@@ -39,48 +36,48 @@ public /*static*/ class MovieUtils {
         try {
             @SuppressLint("DefaultLocale") Thread thread = new Thread(() -> {
                 Thread.currentThread().setName(String.format("%s-%d", "FetchResults", Thread.currentThread().getId()));
-                int oldSize = results != null ? results.size() : 0;
+                int oldSize = adapter.results != null ? adapter.results.size() : 0;
                 //noinspection StatementWithEmptyBody
                 if (adapter == null) return;
                 RecyclerView recyclerView = adapter.getRecyclerView();
-                if (newResult || results == null) {
-                    results = new LinkedList<>();
+                if (newResult || adapter.results == null) {
+                    adapter.results = new LinkedList<>();
                     curPage = 0;
                     if (recyclerView != null)
                         recyclerView.post(() -> adapter.notifyItemRangeRemoved(0, oldSize));
                 }
                 try {
-                    List<Movie> movies = getMovies(MovieAdapter.filter, ++curPage);
+                    List<Movie> movies = getMovies(adapter, MovieAdapter.filter, ++curPage);
                     if (MovieAdapter.filter != MainActivity.Filter.Favorites) {
                         if (movies != null)
                         /*for (int i = 0, moviesSize = movies.size(); i < moviesSize; i++) {
                             Movie movie = getMovie(movies.get(i).getId());
                             results.add(movie);
                         }*/
-                            results.addAll(movies);
+                            adapter.results.addAll(movies);
                         if (recyclerView != null)
                             recyclerView.post(() -> adapter.notifyItemRangeInserted(oldSize, 20));
                     } else {
                         if (recyclerView != null)
                             recyclerView.post(adapter::notifyDataSetChanged);
                     }
-                    System.out.printf("Page: %d/%d Item count: %d\n", curPage, 1000, results.size());
+                    System.out.printf("Page: %d/%d Item count: %d\n", curPage, 1000, adapter.results.size());
                 } catch (Exception ignored) {
                 } // No network
             });
             thread.start();
         } catch (Exception e) {
             e.printStackTrace();
-            results = null;
+            adapter.results = null;
         }
     }
 
 
-    public static List<Movie> getMovies(MainActivity.Filter filter) {
-        return getMovies(filter, 1);
+    public static List<Movie> getMovies(MovieAdapter adapter, MainActivity.Filter filter) {
+        return getMovies(adapter, filter, 1);
     }
 
-    public static List<Movie> getMovies(MainActivity.Filter filter, int page) {
+    public static List<Movie> getMovies(MovieAdapter adapter, MainActivity.Filter filter, int page) {
         ApiUrl apiUrl = new ApiUrl("/movie/", (short) page);
         switch (filter) {
             case Popular:
@@ -102,9 +99,9 @@ public /*static*/ class MovieUtils {
                 pageCount = results.total_pages;
                 return results.results;
             }
-            results = MainActivity.favoritesDbHelper.getAllFavoritess();
-            pageCount = (results.size() % 20) + 1;
-            return results;
+            adapter.results = MainActivity.favoritesDbHelper.getAllFavoritess();
+            pageCount = (adapter.results.size() % 20) + 1;
+            return adapter.results;
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
