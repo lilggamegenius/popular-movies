@@ -37,6 +37,10 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        recyclerView = findViewById(R.id.movie_lists);
+
+        createAdapter();
+
         new Thread(this::setupMainUI).start();
     }
 
@@ -59,14 +63,65 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         drawer.post(toggle::syncState);
 
-        recyclerView = findViewById(R.id.movie_lists);
-
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         navigationView.post(() -> navigationView.setCheckedItem(R.id.nav_popular));
 
-        createAdapter();
+    }
+
+    private void createAdapter() {
+        GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+        final int spanCount = layoutManager.getSpanCount();
+
+        //GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
+        //recyclerView.setLayoutManager(layoutManager);
+        movieAdapter = new MovieAdapter(spanCount, clickedItem -> {
+            if (MovieAdapter.favoritesChanged) {
+                recyclerView.post(() -> movieAdapter.checkForRefresh());
+                return;
+            }
+            new Thread(() -> {
+                Thread.currentThread().setName("ClickedItemHandler");
+                List<Movie> movies;
+                if ((movies = movieAdapter.getResults()) != null) {
+                    Movie movie = movies.get(clickedItem);
+                    Intent intent = new Intent(this, MovieDetail.class);
+                    intent.putExtra("movie", movie.id);
+                    intent.putExtra("favorite", MovieAdapter.filter == Filter.Favorites);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getApplicationContext(), "No internet connectivity",
+                            Toast.LENGTH_LONG).show();
+                }
+            }).start();
+        });
+        recyclerView.post(() -> {
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setAdapter(movieAdapter);
+            recyclerView.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+            recyclerView.addOnScrollListener(new PaginationScrollListener(layoutManager) {
+                @Override
+                protected void loadMoreItems() {
+                    MovieUtils.fetchResults(movieAdapter);
+                }
+
+                @Override
+                public int getTotalPageCount() {
+                    return movieAdapter.getTotalPages();
+                }
+
+                @Override
+                public boolean isLastPage() {
+                    return movieAdapter.getPageCount() >= movieAdapter.getTotalPages();
+                }
+
+                @Override
+                public boolean isLoading() {
+                    return false;
+                }
+            });
+        });
     }
 
     @Override
@@ -145,61 +200,6 @@ public class MainActivity extends AppCompatActivity
 
     void refreshData() {
         MovieUtils.fetchResults(movieAdapter, true);
-    }
-
-    private void createAdapter() {
-        GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-        final int spanCount = layoutManager.getSpanCount();
-
-        //GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
-        //recyclerView.setLayoutManager(layoutManager);
-        movieAdapter = new MovieAdapter(spanCount, clickedItem -> {
-            if (MovieAdapter.favoritesChanged) {
-                recyclerView.post(() -> movieAdapter.checkForRefresh());
-
-                return;
-            }
-            new Thread(() -> {
-                Thread.currentThread().setName("ClickedItemHandler");
-                List<Movie> movies;
-                if ((movies = movieAdapter.getResults()) != null) {
-                    Movie movie = movies.get(clickedItem);
-                    Intent intent = new Intent(this, MovieDetail.class);
-                    intent.putExtra("movie", movie.id);
-                    intent.putExtra("favorite", MovieAdapter.filter == Filter.Favorites);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(getApplicationContext(), "No internet connectivity",
-                            Toast.LENGTH_LONG).show();
-                }
-            }).start();
-        });
-        recyclerView.post(() -> {
-            recyclerView.setItemAnimator(new DefaultItemAnimator());
-            recyclerView.setAdapter(movieAdapter);
-            recyclerView.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-            recyclerView.addOnScrollListener(new PaginationScrollListener(layoutManager) {
-                @Override
-                protected void loadMoreItems() {
-                    MovieUtils.fetchResults(movieAdapter);
-                }
-
-                @Override
-                public int getTotalPageCount() {
-                    return movieAdapter.getTotalPages();
-                }
-
-                @Override
-                public boolean isLastPage() {
-                    return movieAdapter.getPageCount() >= movieAdapter.getTotalPages();
-                }
-
-                @Override
-                public boolean isLoading() {
-                    return false;
-                }
-            });
-        });
     }
 
     public enum Filter {
